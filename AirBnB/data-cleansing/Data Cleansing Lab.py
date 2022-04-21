@@ -24,7 +24,7 @@ convert_price_udf = udf(lambda z: convert_price_to_clean(z), StringType())
 # COMMAND ----------
 
 # Read the data from CSV-file
-filePath = "/FileStore/tables/listings_csv.gz"
+filePath = "/FileStore/tables/listings-1.csv"
 rawDF = (spark
          .read
          .option("header", "true")
@@ -128,7 +128,8 @@ display(baseDF.select("price"))
 # TODO: Replace <FILL_IN> with appropriate code
 
 fixedPriceDF = (baseDF
-                .<FILL_IN>
+                .withColumnRenamed("price", "price_raw")
+                .withColumn("price", convert_price_udf("price_raw"))
                )
 
 # COMMAND ----------
@@ -159,7 +160,7 @@ print("Tests passed.")
 # COMMAND ----------
 
 # TODO: Get rid of price_raw column
-fixedPriceDF = fixedPriceDF.<FILL_IN>
+fixedPriceDF = fixedPriceDF.drop("price_raw")
 
 # COMMAND ----------
 
@@ -174,7 +175,8 @@ fixedPriceDF = fixedPriceDF.<FILL_IN>
 # TODO: Replace <FILL_IN> with appropriate code
 
 changedBooleanDF = (fixedPriceDF
-                    .<FILL_IN>
+                    .withColumn("host_is_superhost", when(col("host_is_superhost").like("t"), True).otherwise(False))
+                    .withColumn("instant_bookable", when(col("instant_bookable").like("t"), True).otherwise(False))
                    )
 
 # COMMAND ----------
@@ -270,7 +272,8 @@ print("Tests passed.")
 # COMMAND ----------
 
 # TODO: Replace <FILL_IN> with appropriate code
-display(imputedDF.<FILL_IN>)
+display(imputedDF.agg(max("price")))
+display(imputedDF.agg(min("price")))
 
 # COMMAND ----------
 
@@ -282,7 +285,7 @@ display(imputedDF.<FILL_IN>)
 
 # TODO: Replace <FILL_IN> with appropriate code
 
-imputedDF.<FILL_IN>
+imputedDF.filter(imputedDF['price'] == 0.00).count()
 
 # COMMAND ----------
 
@@ -303,7 +306,7 @@ display(imputedDF.select("price").where("price < 2500"))
 
 # TODO: Replace <FILL_IN> with appropriate code
 
-posPricesDF = <FILL_IN>
+posPricesDF = imputedDF.where("price > 0 and price <= 2100")
 
 # COMMAND ----------
 
@@ -314,6 +317,7 @@ posPricesDF = <FILL_IN>
 
 cnt = posPricesDF.count()
 cntExtremePrices = posPricesDF.where("price <= 0 or price > 2100").count()
+print(cntExtremePrices)
 
 assert cntExtremePrices == 0, f"Found prices that are 0 or greater than 2100, expected only positive prices and prices that are maximum 2100"
 assert cnt == 3013, f"Number of records, expected 3013 found {str(cnt)}"
@@ -350,7 +354,8 @@ display(posPricesDF.groupBy("minimum_nights").count().orderBy(col("minimum_night
 # COMMAND ----------
 
 # TODO: Replace <FILL_IN> with appropriate code
-cleanDF = posPricesDF.<FILL_IN>
+print(posPricesDF.count())
+cleanDF = posPricesDF.where("minimum_nights <= 30")
 
 # COMMAND ----------
 
