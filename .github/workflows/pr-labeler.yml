@@ -8,6 +8,7 @@ jobs:
 
     steps:
     - name: Labeler
-      uses: actions/labeler@v4.0.0
+      uses: actions/labeler@v4
+
       with:
         repo-token: ${{ secrets.GITHUB_TOKEN }}
